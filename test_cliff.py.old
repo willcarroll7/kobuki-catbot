@@ -20,7 +20,7 @@ def listener():
     twist = Twist()
     while not rospy.is_shutdown():
         if robot_state == 1:
-            for each in range(40):
+            for _ in range(40):
                 twist.linear.x = 0
                 twist.angular.z = math.pi/4.0
                 pub.publish(twist)
