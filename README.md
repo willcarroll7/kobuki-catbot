@@ -14,4 +14,4 @@ Implementation List:
   - [ ] Object targeting using Turtlebot drive commands
 - [ ] Rotational object yeetance
   - [ ] Move so that object is in range of "tail"
-  - [ ] Full speed single/double rotation to remove object from table
+  - [ ] Full speed single/double rotation to ~remove~ yeet object from table
