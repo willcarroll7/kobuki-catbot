@@ -13,6 +13,7 @@ import geometry_msgs.msg as gmm
 
 # FSM States
 STATE_SCAN_OBJECTS = 0
+STATE_ALIGN_OBJECT = 97
 STATE_DIVERT_EDGE = 98
 # TODO: ...
 STATE_TURN_180 = 99
@@ -69,7 +70,21 @@ if __name__ == "__main__":
     left_encoder_target = right_encoder_target = 0
     while not rospy.is_shutdown():
         if robot_state == STATE_SCAN_OBJECTS:
+            # Look for objects and spin until one is found
+            object_found = False 
+            if object_found:
+                robot_state = STATE_ALIGN_OBJECT
+                
+            # else keep turning
+            else:
+                twist = gmm.Twist()
+                twist.angular.z = NAV_TURN_SPEED
+                navi.publish(twist)
             continue  # TODO
+            
+        elif robot_state == STATE_ALIGN_OBJECT:
+            # Align so scanned object is centered with the image
+            continue # TODO
 
         elif robot_state == STATE_DIVERT_EDGE:
             # Set the encoder targets for a 180 degree turn
