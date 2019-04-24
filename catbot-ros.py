@@ -32,7 +32,7 @@ ENC_CLICKS_SLACK = ENC_CLICKS_PER_DEG * 3.0  # 3.0 degrees of slack
 robot_state = STATE_SCAN_OBJECTS
 cliff_sensors = [False, False, False]
 left_encoder = right_encoder = 0
-object_visible = False
+object_found, object_visible = False
 
 
 def cliff_event_callback(event):
@@ -43,7 +43,7 @@ def cliff_event_callback(event):
 
     global cliff_sensors, robot_state
 
-    cliff_sensors[event.sensor] = event.state
+    cliff_sensors[event.sensor] = bool(event.state)
 
     # Ignore undetection of cliff
     if event.state == 0 or robot_state == STATE_TURN_180:
@@ -76,19 +76,17 @@ if __name__ == "__main__":
 
     # State helper variables
     left_encoder_target = right_encoder_target = 0
+    twist = gmm.Twist()
     while not rospy.is_shutdown():
         if robot_state == STATE_SCAN_OBJECTS:
             # Look for objects and spin until one is found
-            object_found = True 
             if object_found:
                 robot_state = STATE_ALIGN_OBJECT
                 
             # else keep turning
             else:
-                twist = gmm.Twist()
                 twist.linear.x = 0.0
                 twist.angular.z = NAV_TURN_SPEED
-                navi.publish(twist)
             continue  # TODO
             
         elif robot_state == STATE_PREPARE_YEET:
@@ -104,24 +102,20 @@ if __name__ == "__main__":
                     right_encoder - right_encoder_target) < ENC_CLICKS_SLACK:
                 robot_state = STATE_SCAN_OBJECTS
             else:
-                twist = gmm.Twist()
                 twist.linear.x = 0.0
                 twist.angular.z = YEET_SPEED
-                navi.publish(twist)
             continue
             
         elif robot_state == STATE_ALIGN_OBJECT:
             # Align so scanned object is centered with the image
             robot_state = STATE_APPROACH_OBJECT
-            continue # TODO
+            continue  # TODO
             
         elif robot_state == STATE_APPROACH_OBJECT:
             # Go toward object until it is close enough not to be seen
-            if object_visible: # TODO
-                twist = gmm.Twist()
+            if object_visible:  # TODO
                 twist.linear.x = FORWARD_SPEED
                 twist.angular.z = 0.0
-                navi.publish(twist)
                 
             # else YEET
             else:
@@ -129,17 +123,16 @@ if __name__ == "__main__":
             continue
 
         elif robot_state == STATE_DIVERT_EDGE:
-            twist = gmm.Twist()
+            # Move away from edge
             twist.linear.x = -FORWARD_SPEED / 2.0
             twist.angular.z = 0.0
-            navi.publish(twist)
+            navi.publish(twist)  # Go ahead and publish command because conditionals are slow and we need to stop ASAP
             
             if not cliff_sensors[0] and not cliff_sensors[1] and not cliff_sensors[2]:
                 # Set the encoder targets for a 180 degree turn
                 left_encoder_target = left_encoder - (ENC_CLICKS_PER_DEG * 180.0)
                 right_encoder_target = right_encoder + (ENC_CLICKS_PER_DEG * 180.0)
                 robot_state = STATE_TURN_180
-            
             continue
 
         elif robot_state == STATE_TURN_180:
@@ -150,10 +143,8 @@ if __name__ == "__main__":
 
             # Else keep turning
             else:
-                twist = gmm.Twist()
                 twist.angular.z = NAV_TURN_SPEED
-                navi.publish(twist)
             continue
 
+        navi.publish(twist)
         rate.sleep()
-
