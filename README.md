@@ -2,10 +2,10 @@
 Kobuki robot implementation based on ROS emulating Cat-like behavior
 
 Implementation List:
-- [ ] Table edge avoidance
+- [x] Table edge avoidance
   - [x] Respond to events from Turtlebot cliff sensors
   - [x] Turn away from edge when edge is detected
-  - [ ] Use wheel encoders to turn precisely 180 degrees away from edge (consider different angles depending on which cliff sensor is activated)
+  - [x] Use wheel encoders to turn precisely 180 degrees away from edge (consider different angles depending on which cliff sensor is activated)
 - [ ] Behavioral finite state machine (FSM)
 - [ ] Object detection and targeting
   - [ ] Interface to Kinect in code
@@ -14,4 +14,4 @@ Implementation List:
   - [ ] Object targeting using Turtlebot drive commands
 - [ ] Rotational object yeetance
   - [ ] Move so that object is in range of "tail"
-  - [ ] Full speed single/double rotation to ~remove~ yeet object from table
+  - [x] Full speed single/double rotation to ~remove~ yeet object from table
