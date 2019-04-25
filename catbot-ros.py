@@ -162,11 +162,11 @@ if __name__ == "__main__":
             right_encoder_target = right_encoder + (ENC_CLICKS_PER_DEG * 360.0) % 65535
             robot_state = STATE_YEET
             if total_rotation <= 0:
-                    total_rotation += 360
-                    turn_direction = 1
-                else:
-                    total_rotation -= 360
-                    turn_direction = 0
+                total_rotation += 360
+                turn_direction = 1
+            else:
+                total_rotation -= 360
+                turn_direction = 0
             
         elif robot_state == STATE_YEET:
             # Spin quickly 360 degrees to yeet enemy object
