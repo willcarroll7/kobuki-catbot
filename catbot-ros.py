@@ -32,7 +32,7 @@ ENC_CLICKS_PER_DEG = 24.444444444
 ENC_CLICKS_SLACK = ENC_CLICKS_PER_DEG * 3.0  # 3.0 degrees of slack
 
 # Global Variables
-robot_state = -1
+robot_state = STATE_SCAN_OBJECTS
 cliff_sensors = [False, False, False]
 left_encoder = right_encoder = 0
 object_found = object_visible = False
@@ -103,7 +103,6 @@ def image_callback(msg):
 
         if radius > 1:
             print("Pink: ", contours)
-            object_found = True
             object_visible = True
 
     # Setup blob detector
@@ -139,8 +138,9 @@ if __name__ == "__main__":
 
         if robot_state == STATE_SCAN_OBJECTS:
             # Look for objects and spin until one is found
-            if object_found:
+            if object_visible:
                 robot_state = STATE_ALIGN_OBJECT
+                
                 
             # else keep turning
             else:
