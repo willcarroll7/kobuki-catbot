@@ -141,6 +141,10 @@ if __name__ == "__main__":
             # Look for objects and spin until one is found
             if object_visible:
                 robot_state = STATE_ALIGN_OBJECT
+                
+            elif (abs(left_encoder - left_encoder_target) % ENC_CLICKS_PER_REV) < ENC_CLICKS_SLACK or (abs(
+                    right_encoder - right_encoder_target) % ENC_CLICKS_PER_REV) < ENC_CLICKS_SLACK:
+                robot_state = STATE_PRE_SCAN
 
             # else keep turning
             else:
