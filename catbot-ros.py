@@ -32,7 +32,7 @@ ENC_CLICKS_SLACK = ENC_CLICKS_PER_DEG * 3.0  # 3.0 degrees of slack
 robot_state = STATE_SCAN_OBJECTS
 cliff_sensors = [False, False, False]
 left_encoder = right_encoder = 0
-object_found, object_visible = False
+object_found = object_visible = True
 
 
 def cliff_event_callback(event):
@@ -73,11 +73,15 @@ if __name__ == "__main__":
     rospy.Subscriber("/mobile_base/sensors/core", kmm.SensorState, sensor_core_callback)
     navi = rospy.Publisher("/cmd_vel_mux/input/navi", gmm.Twist, queue_size=10)
     rate = rospy.Rate(10)  # 10 Hz
-
+    
     # State helper variables
     left_encoder_target = right_encoder_target = 0
     twist = gmm.Twist()
+
     while not rospy.is_shutdown():
+        twist.linear.x = 0.0
+        twist.angular.z = 0.0
+
         if robot_state == STATE_SCAN_OBJECTS:
             # Look for objects and spin until one is found
             if object_found:
@@ -87,14 +91,12 @@ if __name__ == "__main__":
             else:
                 twist.linear.x = 0.0
                 twist.angular.z = NAV_TURN_SPEED
-            continue  # TODO
             
         elif robot_state == STATE_PREPARE_YEET:
             # set encoder targets for 360 degree turn
             left_encoder_target = left_encoder - (ENC_CLICKS_PER_DEG * 360.0)
             right_encoder_target = right_encoder + (ENC_CLICKS_PER_DEG * 360.0)
             robot_state = STATE_YEET
-            continue
             
         elif robot_state == STATE_YEET:
             # Spin quickly 360 degrees to yeet enemy object
@@ -104,12 +106,10 @@ if __name__ == "__main__":
             else:
                 twist.linear.x = 0.0
                 twist.angular.z = YEET_SPEED
-            continue
             
         elif robot_state == STATE_ALIGN_OBJECT:
             # Align so scanned object is centered with the image
             robot_state = STATE_APPROACH_OBJECT
-            continue  # TODO
             
         elif robot_state == STATE_APPROACH_OBJECT:
             # Go toward object until it is close enough not to be seen
@@ -120,7 +120,6 @@ if __name__ == "__main__":
             # else YEET
             else:
                 robot_state = STATE_PREPARE_YEET
-            continue
 
         elif robot_state == STATE_DIVERT_EDGE:
             # Move away from edge
@@ -133,7 +132,6 @@ if __name__ == "__main__":
                 left_encoder_target = left_encoder - (ENC_CLICKS_PER_DEG * 180.0)
                 right_encoder_target = right_encoder + (ENC_CLICKS_PER_DEG * 180.0)
                 robot_state = STATE_TURN_180
-            continue
 
         elif robot_state == STATE_TURN_180:
             # Return to STATE_SCAN_OBJECTS if we've finished turning around
@@ -144,7 +142,6 @@ if __name__ == "__main__":
             # Else keep turning
             else:
                 twist.angular.z = NAV_TURN_SPEED
-            continue
 
         navi.publish(twist)
         rate.sleep()
