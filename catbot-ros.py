@@ -105,7 +105,7 @@ def image_callback(msg):
             pass
 
         if radius > 1:
-            print("Pink: ", contours)
+            #print("Pink: ", contours)
             object_visible = True
         else:
             object_visible = False
@@ -167,7 +167,7 @@ if __name__ == "__main__":
                 robot_state = STATE_SCAN_OBJECTS
             else:
                 twist.linear.x = 0.0
-                #twist.angular.z = YEET_SPEED
+                twist.angular.z = YEET_SPEED/2.0
                 print("YEEEEEET")
             
         elif robot_state == STATE_ALIGN_OBJECT:
