@@ -26,7 +26,7 @@ STATE_TURN_180 = 99
 # Constants
 CLIFF_SENSORS = ["Left", "Center", "Right"]
 NAV_TURN_SPEED = math.pi / 4.0
-YEET_SPEED = math.pi
+YEET_SPEED = math.pi / 1.5
 FORWARD_SPEED = 0.1
 ENC_CLICKS_PER_DEG = 24.444444444
 ENC_CLICKS_SLACK = ENC_CLICKS_PER_DEG * 3.0  # 3.0 degrees of slack
@@ -36,6 +36,8 @@ robot_state = STATE_SCAN_OBJECTS
 cliff_sensors = [False, False, False]
 left_encoder = right_encoder = 0
 object_found = object_visible = False
+total_rotation = 0
+turn_direction = 1
 
 
 def cliff_event_callback(event):
@@ -156,9 +158,15 @@ if __name__ == "__main__":
             
         elif robot_state == STATE_PREPARE_YEET:
             # set encoder targets for 360 degree turn
-            left_encoder_target = left_encoder - (ENC_CLICKS_PER_DEG * 360.0)
-            right_encoder_target = right_encoder + (ENC_CLICKS_PER_DEG * 360.0)
+            left_encoder_target = (left_encoder - (ENC_CLICKS_PER_DEG * 360.0)) % 65535
+            right_encoder_target = right_encoder + (ENC_CLICKS_PER_DEG * 360.0) % 65535
             robot_state = STATE_YEET
+            if total_rotation <= 0:
+                    total_rotation += 360
+                    turn_direction = 1
+                else:
+                    total_rotation -= 360
+                    turn_direction = 0
             
         elif robot_state == STATE_YEET:
             # Spin quickly 360 degrees to yeet enemy object
@@ -166,9 +174,10 @@ if __name__ == "__main__":
                     right_encoder - right_encoder_target) < ENC_CLICKS_SLACK:
                 robot_state = STATE_SCAN_OBJECTS
             else:
-                twist.linear.x = 0.0
-                twist.angular.z = YEET_SPEED/1.5
-                print("YEEEEEET")
+                if turn_direction == 1:
+                    twist.angular.z = YEET_SPEED
+                else:
+                    twist.angular.z = -YEET_SPEED
             
         elif robot_state == STATE_ALIGN_OBJECT:
             # Align so scanned object is centered with the image
@@ -193,9 +202,15 @@ if __name__ == "__main__":
             
             if not cliff_sensors[0] and not cliff_sensors[1] and not cliff_sensors[2]:
                 # Set the encoder targets for a 180 degree turn
-                left_encoder_target = left_encoder - (ENC_CLICKS_PER_DEG * 180.0)
-                right_encoder_target = right_encoder + (ENC_CLICKS_PER_DEG * 180.0)
+                left_encoder_target = (left_encoder - (ENC_CLICKS_PER_DEG * 180.0)) % 65535
+                right_encoder_target = (right_encoder + (ENC_CLICKS_PER_DEG * 180.0)) % 65535
                 robot_state = STATE_TURN_180
+                if total_rotation <= 0:
+                    total_rotation += 180
+                    turn_direction = 1
+                else:
+                    total_rotation -= 180
+                    turn_direction = 0
 
         elif robot_state == STATE_TURN_180:
             # Return to STATE_SCAN_OBJECTS if we've finished turning around
@@ -205,7 +220,10 @@ if __name__ == "__main__":
 
             # Else keep turning
             else:
-                twist.angular.z = NAV_TURN_SPEED
+                if turn_direction == 1:
+                    twist.angular.z = NAV_TURN_SPEED
+                else:
+                    twist.angular.z = -NAV_TURN_SPEED
 
         navi.publish(twist)
         rate.sleep()
