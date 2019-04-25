@@ -167,7 +167,8 @@ if __name__ == "__main__":
                 robot_state = STATE_SCAN_OBJECTS
             else:
                 twist.linear.x = 0.0
-                twist.angular.z = YEET_SPEED
+                #twist.angular.z = YEET_SPEED
+                print("YEEEEEET")
             
         elif robot_state == STATE_ALIGN_OBJECT:
             # Align so scanned object is centered with the image
