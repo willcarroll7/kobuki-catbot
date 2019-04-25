@@ -34,7 +34,7 @@ ENC_CLICKS_SLACK = ENC_CLICKS_PER_DEG * 4.0  # 3.0 degrees of slack
 ENC_CLICKS_PER_REV = ENC_CLICKS_PER_DEG * 360.0
 
 # Global Variables
-robot_state = STATE_PRE_SCAN
+robot_state = STATE_SCAN_OBJECTS
 cliff_sensors = [False, False, False]
 left_encoder = right_encoder = 0
 object_found = object_visible = False
@@ -142,10 +142,6 @@ if __name__ == "__main__":
             if object_visible:
                 robot_state = STATE_ALIGN_OBJECT
                 
-            elif (abs(left_encoder - left_encoder_target) % ENC_CLICKS_PER_REV) < ENC_CLICKS_SLACK or (abs(
-                    right_encoder - right_encoder_target) % ENC_CLICKS_PER_REV) < ENC_CLICKS_SLACK:
-                robot_state = STATE_PRE_SCAN
-
             # else keep turning
             else:
                 if turn_direction == 1:
@@ -153,18 +149,6 @@ if __name__ == "__main__":
                 else:
                     twist.angular.z = -NAV_TURN_SPEED
 
-        elif robot_state == STATE_PRE_SCAN:
-            # set encoder targets for 360 degree turn
-            left_encoder_target = (left_encoder - (ENC_CLICKS_PER_DEG * 360.0)) % 65535
-            right_encoder_target = right_encoder + (ENC_CLICKS_PER_DEG * 360.0) % 65535
-            robot_state = STATE_SCAN_OBJECTS
-
-            if total_rotation <= 0:
-                total_rotation += 360
-                turn_direction = 1
-            else:
-                total_rotation -= 360
-                turn_direction = 0
 
         elif robot_state == STATE_PREPARE_YEET:
             # set encoder targets for 360 degree turn
@@ -183,7 +167,7 @@ if __name__ == "__main__":
             # Spin quickly 360 degrees to yeet enemy object
             if (abs(left_encoder - left_encoder_target) % ENC_CLICKS_PER_REV) < ENC_CLICKS_SLACK or (abs(
                     right_encoder - right_encoder_target) % ENC_CLICKS_PER_REV) < ENC_CLICKS_SLACK:
-                robot_state = STATE_PRE_SCAN
+                robot_state = STATE_SCAN_OBJECTS
             else:
                 if turn_direction == 1:
                     twist.angular.z = YEET_SPEED
