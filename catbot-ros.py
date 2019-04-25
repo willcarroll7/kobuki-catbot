@@ -77,19 +77,24 @@ def image_callback(msg):
     # Decode image into CV2 usable object
     np_arr = numpy.fromstring(msg.data, numpy.uint8)
     image_cv = cv2.imdecode(np_arr, cv2.CV_LOAD_IMAGE_COLOR)
+    hsv = cv2.cvtColor(image_cv, cv2.COLOR_BGR2HSV)
+    pink_lower = numpy.array([100, 0, 200])
+    pink_upper = numpy.array([180, 20, 255])
+    mask = cv2.inRange(hsv, pink_lower, pink_upper)
+    masked_image = cv2.bitwise_and(image_cv, image_cv, mask= mask)
+    
 
     # Setup blob detector
-    blob = cv2.SimpleBlobDetector()
-    keypoints = blob.detect(image_cv)
+    #blob = cv2.SimpleBlobDetector()
+    #keypoints = blob.detect(image_cv)
 
     # Draw keypoints on image
-    image_cv_kp = cv2.drawKeypoints(image_cv, keypoints, numpy.array([]), (0, 0, 255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+    #image_cv_kp = cv2.drawKeypoints(image_cv, keypoints, numpy.array([]), (0, 0, 255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
     msg = smm.CompressedImage()
     msg.header.stamp = rospy.Time.now()
     msg.format = "jpeg"
-    msg.data = numpy.array(cv2.imencode('.jpg', image_cv_kp)[1]).tostring()
+    msg.data = numpy.array(cv2.imencode('.jpg', mask)[1]).tostring()
     camv.publish(msg)
-
 
 
 # Setup application and run FSM loop
@@ -99,7 +104,7 @@ if __name__ == "__main__":
     rospy.Subscriber("/mobile_base/sensors/core", kmm.SensorState, sensor_core_callback)
     rospy.Subscriber("/camera/rgb/image_rect_color/compressed", smm.CompressedImage, image_callback)
     navi = rospy.Publisher("/cmd_vel_mux/input/navi", gmm.Twist, queue_size=10)
-    camv = rospy.Publisher("/catbot/blobs", smm.CompressedImage)
+    camv = rospy.Publisher("/catbot/blobs/compressed", smm.CompressedImage, queue_size=10)
     rate = rospy.Rate(10)  # 10 Hz
     
     # State helper variables
