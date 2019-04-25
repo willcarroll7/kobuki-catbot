@@ -72,6 +72,8 @@ def sensor_core_callback(msg):
 def image_callback(msg):
     """Triggered upon Turtlebot sensor data received."""
 
+    global camv
+
     # Decode image into CV2 usable object
     np_arr = numpy.fromstring(msg.data, numpy.uint8)
     image_cv = cv2.imdecode(np_arr, cv2.CV_LOAD_IMAGE_COLOR)
@@ -82,7 +84,12 @@ def image_callback(msg):
 
     # Draw keypoints on image
     image_cv_kp = cv2.drawKeypoints(image_cv, keypoints, numpy.array([]), (0, 0, 255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-    cv2.imshow("Keypoints", image_cv_kp);
+    msg = smm.CompressedImage()
+    msg.header.stamp = rospy.Time.now()
+    msg.format = "jpeg"
+    msg.data = numpy.array(cv2.imencode('.jpg', image_cv_kp)[1]).tostring()
+    camv.publish(msg)
+
 
 
 # Setup application and run FSM loop
@@ -92,6 +99,7 @@ if __name__ == "__main__":
     rospy.Subscriber("/mobile_base/sensors/core", kmm.SensorState, sensor_core_callback)
     rospy.Subscriber("/camera/rgb/image_rect_color/compressed", smm.CompressedImage, image_callback)
     navi = rospy.Publisher("/cmd_vel_mux/input/navi", gmm.Twist, queue_size=10)
+    camv = rospy.Publisher("/catbot/blobs", smm.CompressedImage)
     rate = rospy.Rate(10)  # 10 Hz
     
     # State helper variables
