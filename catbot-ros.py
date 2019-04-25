@@ -16,7 +16,6 @@ import sensor_msgs.msg as smm
 
 # FSM States
 STATE_SCAN_OBJECTS = 0
-STATE_PRE_SCAN = 1
 STATE_PREPARE_YEET = 10
 STATE_YEET = 11
 STATE_ALIGN_OBJECT = 12
@@ -152,8 +151,8 @@ if __name__ == "__main__":
 
         elif robot_state == STATE_PREPARE_YEET:
             # set encoder targets for 360 degree turn
-            left_encoder_target = (left_encoder - (ENC_CLICKS_PER_DEG * 360.0)) % 65535
-            right_encoder_target = right_encoder + (ENC_CLICKS_PER_DEG * 360.0) % 65535
+            left_encoder_target = (left_encoder - (ENC_CLICKS_PER_DEG * 270.0)) % 65535
+            right_encoder_target = right_encoder + (ENC_CLICKS_PER_DEG * 270.0) % 65535
             robot_state = STATE_YEET
 
             if total_rotation <= 0:
@@ -165,8 +164,8 @@ if __name__ == "__main__":
 
         elif robot_state == STATE_YEET:
             # Spin quickly 360 degrees to yeet enemy object
-            if (abs(left_encoder - left_encoder_target) % ENC_CLICKS_PER_REV) < ENC_CLICKS_SLACK or (abs(
-                    right_encoder - right_encoder_target) % ENC_CLICKS_PER_REV) < ENC_CLICKS_SLACK:
+            if abs(left_encoder - left_encoder_target) < ENC_CLICKS_SLACK or abs(
+                    right_encoder - right_encoder_target) < ENC_CLICKS_SLACK:
                 robot_state = STATE_SCAN_OBJECTS
             else:
                 if turn_direction == 1:
@@ -209,8 +208,8 @@ if __name__ == "__main__":
 
         elif robot_state == STATE_TURN_180:
             # Return to STATE_SCAN_OBJECTS if we've finished turning around
-            if (abs(left_encoder - left_encoder_target) % ENC_CLICKS_PER_REV) < ENC_CLICKS_SLACK or (abs(
-                    right_encoder - right_encoder_target) % ENC_CLICKS_PER_REV) < ENC_CLICKS_SLACK:
+            if abs(left_encoder - left_encoder_target) < ENC_CLICKS_SLACK or abs(
+                    right_encoder - right_encoder_target) < ENC_CLICKS_SLACK:
                 robot_state = STATE_SCAN_OBJECTS
 
             # Else keep turning
