@@ -73,6 +73,8 @@ def sensor_core_callback(msg):
 
 
 frame_cntr = 0
+
+
 def image_callback(msg):
     """Triggered upon Turtlebot sensor data received."""
     global frame_cntr
@@ -92,10 +94,10 @@ def image_callback(msg):
     pink_lower = numpy.array([149, 128, 128])
     pink_upper = numpy.array([170, 255, 255])
     mask = cv2.inRange(hsv, pink_lower, pink_upper)
-    masked_image = cv2.bitwise_and(blinder, blinder, mask= mask)
+    masked_image = cv2.bitwise_and(blinder, blinder, mask=mask)
 
     contours = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,
-            cv2.CHAIN_APPROX_SIMPLE)[-2]
+                                cv2.CHAIN_APPROX_SIMPLE)[-2]
 
     if len(contours) > 0:
         c = max(contours, key=cv2.contourArea)
@@ -118,14 +120,14 @@ def image_callback(msg):
 
 # Setup application and run FSM loop
 if __name__ == "__main__":
-    rospy.init_node("catbot",  anonymous=True)
+    rospy.init_node("catbot", anonymous=True)
     rospy.Subscriber("/mobile_base/events/cliff", kmm.CliffEvent, cliff_event_callback)
     rospy.Subscriber("/mobile_base/sensors/core", kmm.SensorState, sensor_core_callback)
     rospy.Subscriber("/camera/rgb/image_rect_color/compressed", smm.CompressedImage, image_callback)
     navi = rospy.Publisher("/cmd_vel_mux/input/navi", gmm.Twist, queue_size=10)
     camv = rospy.Publisher("/catbot/blobs/compressed", smm.CompressedImage, queue_size=10)
     rate = rospy.Rate(10)  # 10 Hz
-    
+
     # State helper variables
     left_encoder_target = right_encoder_target = 0
     twist = gmm.Twist()
@@ -145,53 +147,54 @@ if __name__ == "__main__":
                     twist.angular.z = NAV_TURN_SPEED
                 else:
                     twist.angular.z = -NAV_TURN_SPEED
-                
+
         elif robot_state == STATE_PRE_SCAN:
             # set encoder targets for 360 degree turn
             left_encoder_target = (left_encoder - (ENC_CLICKS_PER_DEG * 360.0)) % 65535
             right_encoder_target = right_encoder + (ENC_CLICKS_PER_DEG * 360.0) % 65535
             robot_state = STATE_SCAN_OBJECTS
-            
+
             if total_rotation <= 0:
                 total_rotation += 360
                 turn_direction = 1
             else:
                 total_rotation -= 360
                 turn_direction = 0
-            
+
         elif robot_state == STATE_PREPARE_YEET:
             # set encoder targets for 360 degree turn
             left_encoder_target = (left_encoder - (ENC_CLICKS_PER_DEG * 360.0)) % 65535
             right_encoder_target = right_encoder + (ENC_CLICKS_PER_DEG * 360.0) % 65535
             robot_state = STATE_YEET
-            
+
             if total_rotation <= 0:
                 total_rotation += 360
                 turn_direction = 1
             else:
                 total_rotation -= 360
                 turn_direction = 0
-            
+
         elif robot_state == STATE_YEET:
             # Spin quickly 360 degrees to yeet enemy object
-            if abs(left_encoder - left_encoder_target) % 65535 < ENC_CLICKS_SLACK or abs(right_encoder - right_encoder_target) % 65535 < ENC_CLICKS_SLACK:
+            if abs(left_encoder - left_encoder_target) % 65535 < ENC_CLICKS_SLACK or abs(
+                    right_encoder - right_encoder_target) % 65535 < ENC_CLICKS_SLACK:
                 robot_state = STATE_SCAN_OBJECTS
             else:
                 if turn_direction == 1:
                     twist.angular.z = YEET_SPEED
                 else:
                     twist.angular.z = -YEET_SPEED
-            
+
         elif robot_state == STATE_ALIGN_OBJECT:
             # Align so scanned object is centered with the image
             robot_state = STATE_APPROACH_OBJECT
-            
+
         elif robot_state == STATE_APPROACH_OBJECT:
             # Go toward object until it is close enough not to be seen
             if object_visible:  # TODO
                 twist.linear.x = FORWARD_SPEED
                 twist.angular.z = 0.0
-                
+
             # else YEET
             else:
                 robot_state = STATE_PREPARE_YEET
@@ -202,7 +205,7 @@ if __name__ == "__main__":
             twist.linear.x = -FORWARD_SPEED / 2.0
             twist.angular.z = 0.0
             navi.publish(twist)  # Go ahead and publish command because conditionals are slow and we need to stop ASAP
-            
+
             if not cliff_sensors[0] and not cliff_sensors[1] and not cliff_sensors[2]:
                 # Set the encoder targets for a 180 degree turn
                 left_encoder_target = (left_encoder - (ENC_CLICKS_PER_DEG * 180.0)) % 65535
@@ -217,7 +220,8 @@ if __name__ == "__main__":
 
         elif robot_state == STATE_TURN_180:
             # Return to STATE_SCAN_OBJECTS if we've finished turning around
-            if abs(left_encoder - left_encoder_target) % 65535 < ENC_CLICKS_SLACK or abs(right_encoder - right_encoder_target) % 65535 < ENC_CLICKS_SLACK:
+            if abs(left_encoder - left_encoder_target) % 65535 < ENC_CLICKS_SLACK or abs(
+                    right_encoder - right_encoder_target) % 65535 < ENC_CLICKS_SLACK:
                 robot_state = STATE_SCAN_OBJECTS
 
             # Else keep turning
