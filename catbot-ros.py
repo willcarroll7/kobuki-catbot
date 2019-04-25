@@ -81,7 +81,7 @@ def image_callback(msg):
     keypoints = blob.detect(image_cv)
 
     # Draw keypoints on image
-    image_cv_kp = cv2.drawKeyPoints(image_cv, keypoints, numpy.array([]), (0, 0, 255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+    image_cv_kp = cv2.drawKeypoints(image_cv, keypoints, numpy.array([]), (0, 0, 255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
     cv2.imshow("Keypoints", image_cv_kp);
 
 
