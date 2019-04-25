@@ -29,7 +29,7 @@ NAV_TURN_SPEED = math.pi / 4.0
 YEET_SPEED = math.pi / 1.5
 FORWARD_SPEED = 0.1
 ENC_CLICKS_PER_DEG = 24.444444444
-ENC_CLICKS_SLACK = ENC_CLICKS_PER_DEG * 3.0  # 3.0 degrees of slack
+ENC_CLICKS_SLACK = ENC_CLICKS_PER_DEG * 4.0  # 3.0 degrees of slack
 
 # Global Variables
 robot_state = STATE_SCAN_OBJECTS
@@ -95,31 +95,19 @@ def image_callback(msg):
 
     contours = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,
             cv2.CHAIN_APPROX_SIMPLE)[-2]
-    center = None
 
     if len(contours) > 0:
         c = max(contours, key=cv2.contourArea)
-        ((x, y), radius) = cv2.minEnclosingCircle(c)
-        M = cv2.moments(c)
-        try:
-            center = (int(M["m10"] / M["m00"]), int(M["m01"]/ M["m00"]))
-        except:
-            pass
+        (_, radius) = cv2.minEnclosingCircle(c)
 
         if radius > 1:
-            #print("Pink: ", contours)
             object_visible = True
         else:
             object_visible = False
     else:
         object_visible = False
 
-    # Setup blob detector
-    #blob = cv2.SimpleBlobDetector()
-    #keypoints = blob.detect(image_cv)
-
     # Draw keypoints on image
-    #image_cv_kp = cv2.drawKeypoints(image_cv, keypoints, numpy.array([]), (0, 0, 255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
     msg = smm.CompressedImage()
     msg.header.stamp = rospy.Time.now()
     msg.format = "jpeg"
@@ -149,8 +137,7 @@ if __name__ == "__main__":
             # Look for objects and spin until one is found
             if object_visible:
                 robot_state = STATE_ALIGN_OBJECT
-                
-                
+
             # else keep turning
             else:
                 twist.linear.x = 0.0
@@ -170,8 +157,7 @@ if __name__ == "__main__":
             
         elif robot_state == STATE_YEET:
             # Spin quickly 360 degrees to yeet enemy object
-            if abs(left_encoder - left_encoder_target) < ENC_CLICKS_SLACK or abs(
-                    right_encoder - right_encoder_target) < ENC_CLICKS_SLACK:
+            if abs(left_encoder - left_encoder_target) % 65535 < ENC_CLICKS_SLACK or abs(right_encoder - right_encoder_target) % 65535 < ENC_CLICKS_SLACK:
                 robot_state = STATE_SCAN_OBJECTS
             else:
                 if turn_direction == 1:
@@ -214,8 +200,7 @@ if __name__ == "__main__":
 
         elif robot_state == STATE_TURN_180:
             # Return to STATE_SCAN_OBJECTS if we've finished turning around
-            if abs(left_encoder - left_encoder_target) < ENC_CLICKS_SLACK or abs(
-                    right_encoder - right_encoder_target) < ENC_CLICKS_SLACK:
+            if abs(left_encoder - left_encoder_target) % 65535 < ENC_CLICKS_SLACK or abs(right_encoder - right_encoder_target) % 65535 < ENC_CLICKS_SLACK:
                 robot_state = STATE_SCAN_OBJECTS
 
             # Else keep turning
