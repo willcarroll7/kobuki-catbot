@@ -31,6 +31,7 @@ YEET_SPEED = math.pi / 1.5
 FORWARD_SPEED = 0.1
 ENC_CLICKS_PER_DEG = 24.444444444
 ENC_CLICKS_SLACK = ENC_CLICKS_PER_DEG * 4.0  # 3.0 degrees of slack
+ENC_CLICKS_PER_REV = ENC_CLICKS_PER_DEG * 360.0
 
 # Global Variables
 robot_state = STATE_PRE_SCAN
@@ -176,8 +177,8 @@ if __name__ == "__main__":
 
         elif robot_state == STATE_YEET:
             # Spin quickly 360 degrees to yeet enemy object
-            if abs(left_encoder - left_encoder_target) % 65535 < ENC_CLICKS_SLACK or abs(
-                    right_encoder - right_encoder_target) % 65535 < ENC_CLICKS_SLACK:
+            if (abs(left_encoder - left_encoder_target) % ENC_CLICKS_PER_REV) < ENC_CLICKS_SLACK or (abs(
+                    right_encoder - right_encoder_target) % ENC_CLICKS_PER_REV) < ENC_CLICKS_SLACK:
                 robot_state = STATE_SCAN_OBJECTS
             else:
                 if turn_direction == 1:
@@ -220,8 +221,8 @@ if __name__ == "__main__":
 
         elif robot_state == STATE_TURN_180:
             # Return to STATE_SCAN_OBJECTS if we've finished turning around
-            if abs(left_encoder - left_encoder_target) % 65535 < ENC_CLICKS_SLACK or abs(
-                    right_encoder - right_encoder_target) % 65535 < ENC_CLICKS_SLACK:
+            if (abs(left_encoder - left_encoder_target) % ENC_CLICKS_PER_REV) < ENC_CLICKS_SLACK or (abs(
+                    right_encoder - right_encoder_target) % ENC_CLICKS_PER_REV) < ENC_CLICKS_SLACK:
                 robot_state = STATE_SCAN_OBJECTS
 
             # Else keep turning
