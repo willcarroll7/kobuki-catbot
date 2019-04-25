@@ -82,11 +82,14 @@ def image_callback(msg):
     # Decode image into CV2 usable object
     np_arr = numpy.fromstring(msg.data, numpy.uint8)
     image_cv = cv2.imdecode(np_arr, cv2.CV_LOAD_IMAGE_COLOR)
-    hsv = cv2.cvtColor(image_cv, cv2.COLOR_BGR2HSV)
+
+    blinder = image_cv[:, 280:360]
+
+    hsv = cv2.cvtColor(blinder, cv2.COLOR_BGR2HSV)
     pink_lower = numpy.array([149, 128, 128])
     pink_upper = numpy.array([170, 255, 255])
     mask = cv2.inRange(hsv, pink_lower, pink_upper)
-    masked_image = cv2.bitwise_and(image_cv, image_cv, mask= mask)
+    masked_image = cv2.bitwise_and(blinder, blinder, mask= mask)
 
     contours = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,
             cv2.CHAIN_APPROX_SIMPLE)[-2]
@@ -104,6 +107,10 @@ def image_callback(msg):
         if radius > 1:
             print("Pink: ", contours)
             object_visible = True
+        else:
+            object_visible = False
+    else:
+        object_visible = False
 
     # Setup blob detector
     #blob = cv2.SimpleBlobDetector()
@@ -178,6 +185,7 @@ if __name__ == "__main__":
 
         elif robot_state == STATE_DIVERT_EDGE:
             # Move away from edge
+            object_visible = False
             twist.linear.x = -FORWARD_SPEED / 2.0
             twist.angular.z = 0.0
             navi.publish(twist)  # Go ahead and publish command because conditionals are slow and we need to stop ASAP
