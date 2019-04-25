@@ -10,8 +10,8 @@ import rospy
 import cv2
 import numpy
 
-import kobuki_msgs.msg as kmm
 import geometry_msgs.msg as gmm
+import kobuki_msgs.msg as kmm
 import sensor_msgs.msg as smm
 
 # FSM States
@@ -71,10 +71,19 @@ def sensor_core_callback(msg):
     
 def image_callback(msg):
     """Triggered upon Turtlebot sensor data received."""
-    
+
+    # Decode image into CV2 usable object
     np_arr = numpy.fromstring(msg.data, numpy.uint8)
-    image_np = cv2.imdecode(np_arr, cv2.CV_LOAD_IMAGE_COLOR)
-    print(image_np)
+    image_cv = cv2.imdecode(np_arr, cv2.CV_LOAD_IMAGE_COLOR)
+
+    # Setup blob detector
+    blob = cv2.SimpleBlobDetector()
+    keypoints = blob.detect(image_cv)
+
+    # Draw keypoints on image
+    image_cv_kp = cv2.drawKeyPoints(image_cv, keypoints, numpy.array([]), (0, 0, 255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+    cv2.imshow("Keypoints", image_cv_kp);
+
 
 # Setup application and run FSM loop
 if __name__ == "__main__":
