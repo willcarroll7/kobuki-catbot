@@ -7,9 +7,11 @@ catbot-ros.py - main executable Python file for kobuki-catbot project
 
 import math
 import rospy
+import cv2
 
 import kobuki_msgs.msg as kmm
 import geometry_msgs.msg as gmm
+import sensor_msgs.msg as smm
 
 # FSM States
 STATE_SCAN_OBJECTS = 0
@@ -65,12 +67,17 @@ def sensor_core_callback(msg):
     left_encoder = msg.left_encoder
     right_encoder = msg.right_encoder
 
+    
+def image_callback(msg):
+    """Triggered upon Turtlebot sensor data received."""
+    print(msg.data)
 
 # Setup application and run FSM loop
 if __name__ == "__main__":
     rospy.init_node("catbot",  anonymous=True)
     rospy.Subscriber("/mobile_base/events/cliff", kmm.CliffEvent, cliff_event_callback)
     rospy.Subscriber("/mobile_base/sensors/core", kmm.SensorState, sensor_core_callback)
+    rospy.Subscriber("/camera/rgb/image_rect_color/compressed", smm.CompressedImage, image_callback)
     navi = rospy.Publisher("/cmd_vel_mux/input/navi", gmm.Twist, queue_size=10)
     rate = rospy.Rate(10)  # 10 Hz
     
