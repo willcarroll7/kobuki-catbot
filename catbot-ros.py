@@ -68,21 +68,43 @@ def sensor_core_callback(msg):
     left_encoder = msg.left_encoder
     right_encoder = msg.right_encoder
 
-    
+
+frame_cntr = 0
 def image_callback(msg):
     """Triggered upon Turtlebot sensor data received."""
+    global frame_cntr
+    frame_cntr = (frame_cntr + 1) % 5
+    if frame_cntr != 0:
+        return
 
-    global camv
+    global camv, object_found, object_visible
 
     # Decode image into CV2 usable object
     np_arr = numpy.fromstring(msg.data, numpy.uint8)
     image_cv = cv2.imdecode(np_arr, cv2.CV_LOAD_IMAGE_COLOR)
     hsv = cv2.cvtColor(image_cv, cv2.COLOR_BGR2HSV)
-    pink_lower = numpy.array([100, 0, 200])
-    pink_upper = numpy.array([180, 20, 255])
+    pink_lower = numpy.array([149, 128, 128])
+    pink_upper = numpy.array([170, 255, 255])
     mask = cv2.inRange(hsv, pink_lower, pink_upper)
     masked_image = cv2.bitwise_and(image_cv, image_cv, mask= mask)
-    
+
+    contours = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,
+            cv2.CHAIN_APPROX_SIMPLE)[-2]
+    center = None
+
+    if len(contours) > 0:
+        c = max(contours, key=cv2.contourArea)
+        ((x, y), radius) = cv2.minEnclosingCircle(c)
+        M = cv2.moments(c)
+        try:
+            center = (int(M["m10"] / M["m00"]), int(M["m01"]/ M["m00"]))
+        except:
+            pass
+
+        if radius > 1:
+            print("Pink: ", contours)
+            object_found = True
+            object_visible = True
 
     # Setup blob detector
     #blob = cv2.SimpleBlobDetector()
@@ -93,7 +115,7 @@ def image_callback(msg):
     msg = smm.CompressedImage()
     msg.header.stamp = rospy.Time.now()
     msg.format = "jpeg"
-    msg.data = numpy.array(cv2.imencode('.jpg', mask)[1]).tostring()
+    msg.data = numpy.array(cv2.imencode('.jpg', masked_image)[1]).tostring()
     camv.publish(msg)
 
 
