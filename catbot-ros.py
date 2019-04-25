@@ -167,7 +167,7 @@ if __name__ == "__main__":
                 robot_state = STATE_SCAN_OBJECTS
             else:
                 twist.linear.x = 0.0
-                twist.angular.z = YEET_SPEED/2.0
+                twist.angular.z = YEET_SPEED/1.5
                 print("YEEEEEET")
             
         elif robot_state == STATE_ALIGN_OBJECT:
