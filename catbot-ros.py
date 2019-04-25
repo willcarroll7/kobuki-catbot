@@ -16,6 +16,7 @@ import sensor_msgs.msg as smm
 
 # FSM States
 STATE_SCAN_OBJECTS = 0
+STATE_PRE_SCAN = 1
 STATE_PREPARE_YEET = 10
 STATE_YEET = 11
 STATE_ALIGN_OBJECT = 12
@@ -32,7 +33,7 @@ ENC_CLICKS_PER_DEG = 24.444444444
 ENC_CLICKS_SLACK = ENC_CLICKS_PER_DEG * 4.0  # 3.0 degrees of slack
 
 # Global Variables
-robot_state = STATE_SCAN_OBJECTS
+robot_state = STATE_PRE_SCAN
 cliff_sensors = [False, False, False]
 left_encoder = right_encoder = 0
 object_found = object_visible = False
@@ -140,14 +141,30 @@ if __name__ == "__main__":
 
             # else keep turning
             else:
-                twist.linear.x = 0.0
-                twist.angular.z = NAV_TURN_SPEED
+                if turn_direction == 1:
+                    twist.angular.z = NAV_TURN_SPEED
+                else:
+                    twist.angular.z = -NAV_TURN_SPEED
+                
+        elif robot_state == STATE_PRE_SCAN:
+            # set encoder targets for 360 degree turn
+            left_encoder_target = (left_encoder - (ENC_CLICKS_PER_DEG * 360.0)) % 65535
+            right_encoder_target = right_encoder + (ENC_CLICKS_PER_DEG * 360.0) % 65535
+            robot_state = STATE_SCAN_OBJECTS
+            
+            if total_rotation <= 0:
+                total_rotation += 360
+                turn_direction = 1
+            else:
+                total_rotation -= 360
+                turn_direction = 0
             
         elif robot_state == STATE_PREPARE_YEET:
             # set encoder targets for 360 degree turn
             left_encoder_target = (left_encoder - (ENC_CLICKS_PER_DEG * 360.0)) % 65535
             right_encoder_target = right_encoder + (ENC_CLICKS_PER_DEG * 360.0) % 65535
             robot_state = STATE_YEET
+            
             if total_rotation <= 0:
                 total_rotation += 360
                 turn_direction = 1
