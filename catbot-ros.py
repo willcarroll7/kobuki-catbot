@@ -179,7 +179,7 @@ if __name__ == "__main__":
             # Spin quickly 360 degrees to yeet enemy object
             if (abs(left_encoder - left_encoder_target) % ENC_CLICKS_PER_REV) < ENC_CLICKS_SLACK or (abs(
                     right_encoder - right_encoder_target) % ENC_CLICKS_PER_REV) < ENC_CLICKS_SLACK:
-                robot_state = STATE_SCAN_OBJECTS
+                robot_state = STATE_PRE_SCAN
             else:
                 if turn_direction == 1:
                     twist.angular.z = YEET_SPEED
