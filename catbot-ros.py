@@ -32,10 +32,10 @@ ENC_CLICKS_PER_DEG = 24.444444444
 ENC_CLICKS_SLACK = ENC_CLICKS_PER_DEG * 3.0  # 3.0 degrees of slack
 
 # Global Variables
-robot_state = STATE_SCAN_OBJECTS
+robot_state = -1
 cliff_sensors = [False, False, False]
 left_encoder = right_encoder = 0
-object_found = object_visible = True
+object_found = object_visible = False
 
 
 def cliff_event_callback(event):
@@ -72,7 +72,7 @@ def sensor_core_callback(msg):
 def image_callback(msg):
     """Triggered upon Turtlebot sensor data received."""
     
-    np_arr = numpy.fromstring(ros_data.data, numpy.uint8)
+    np_arr = numpy.fromstring(msg.data, numpy.uint8)
     image_np = cv2.imdecode(np_arr, cv2.CV_LOAD_IMAGE_COLOR)
     print(image_np)
 
