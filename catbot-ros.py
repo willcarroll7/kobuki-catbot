@@ -8,6 +8,7 @@ catbot-ros.py - main executable Python file for kobuki-catbot project
 import math
 import rospy
 import cv2
+import numpy
 
 import kobuki_msgs.msg as kmm
 import geometry_msgs.msg as gmm
@@ -70,7 +71,10 @@ def sensor_core_callback(msg):
     
 def image_callback(msg):
     """Triggered upon Turtlebot sensor data received."""
-    print(msg.data)
+    
+    np_arr = numpy.fromstring(ros_data.data, numpy.uint8)
+    image_np = cv2.imdecode(np_arr, cv2.CV_LOAD_IMAGE_COLOR)
+    print(image_np)
 
 # Setup application and run FSM loop
 if __name__ == "__main__":
